@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash"
@@ -50,26 +49,37 @@ func ParseKeyDecodingMode(input string) (KeyDecodingMode, error) {
 	}
 
 	return parsed, err
+
+}
+
+//https://play.golang.org/p/-di2b0pzC_
+func base64url_decode(s string) ([]byte, error) {
+	base64Str := strings.Map(func(r rune) rune {
+		switch r {
+		case '-':
+			return '+'
+		case '_':
+			return '/'
+		}
+
+		return r
+	}, s)
+
+	if pad := len(base64Str) % 4; pad > 0 {
+		base64Str += strings.Repeat("=", 4-pad)
+	}
+
+	return base64.StdEncoding.DecodeString(base64Str)
 }
 
 // CreateHmac : Returns Hash from input string.
 func CreateHmac(key string, isBase64 bool, mode KeyDecodingMode) (hash.Hash, error) {
 	var err error
-	var b64DecodedKey []byte
 	var k []byte
 
 	if isBase64 {
-		b64DecodedKey, err = base64.URLEncoding.DecodeString(AddBase64Padding(key))
-		if err == nil {
-			// If no error, then use the base 64 decoded key
-			key = string(b64DecodedKey[:])
-		}
-	}
-
-	if mode == Utf8 {
-		k = []byte(key)
-	} else {
-		k, err = hex.DecodeString(key)
+		// If no error, then use the base 64 decoded key
+		k, err = base64url_decode(key)
 	}
 
 	if err != nil {

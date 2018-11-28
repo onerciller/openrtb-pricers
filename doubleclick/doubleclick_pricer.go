@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-
-	"github.com/benjaminch/openrtb-pricers/helpers"
+	"strings"
 
 	"github.com/golang/glog"
+	"github.com/onerciller/openrtb-pricers/helpers"
 )
 
 // DoubleClickPricer implementing price encryption and decryption
@@ -131,7 +131,8 @@ func (dc *DoubleClickPricer) Encrypt(
 	}
 
 	// final_message = WebSafeBase64Encode( iv || enc_price || signature )
-	return base64.URLEncoding.EncodeToString(append(append(iv[:], encoded[:]...), signature[:]...)), err
+	fm := base64.URLEncoding.EncodeToString(append(append(iv[:], encoded[:]...), signature[:]...))
+	return strings.Replace(fm, "==", "", -1), err
 }
 
 // Decrypt decrypts an ecrypted price.
